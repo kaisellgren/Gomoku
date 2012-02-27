@@ -50,7 +50,7 @@
 		 *
 		 * If it's a string "player", then it's human, otherwise it's an AI of the specified name.
 		 */
-		players: ['player', 'SampleAI'],
+		players: ['player', 'KaiAI'],
 
 		/**
 		 * List of all possible AI players.
@@ -92,22 +92,20 @@
 			// Draw squares/cells.
 			c.strokeStyle = 'rgb(128,128,128)';
 
-			for (var x = 0; x <= numberOfCellsHor; x++)
-			{
+			for (var x = 0; x <= numberOfCellsHor; x++) {
 				c.beginPath();
 				c.moveTo(x * this.boardCellSize + 0.5, 0);
 				c.lineTo(x * this.boardCellSize + 0.5, this.boardHeight);
-				c.closePath();
 				c.stroke();
+				c.closePath();
 			}
 
-			for (var y = 0; y <= numberOfCellsVer; y++)
-			{
+			for (var y = 0; y <= numberOfCellsVer; y++) {
 				c.beginPath();
 				c.moveTo(0, y * this.boardCellSize + 0.5);
 				c.lineTo(this.boardWidth, y * this.boardCellSize + 0.5);
-				c.closePath();
 				c.stroke();
+				c.closePath();
 			}
 		},
 
@@ -169,12 +167,12 @@
 
 			// Process AI logic.
 			if (currentPlayer !== 'player') {
-				var position = this.AIs[currentPlayer]();
+				var position = this.AIs[currentPlayer](function(position) {
+					this.addGameObject(position[0], position[1], this.turn);
 
-				this.addGameObject(position[0], position[1], this.turn);
-
-				this.turn = 1 - this.turn;
-				this.draw();
+					this.turn = 1 - this.turn;
+					this.draw();
+				}.bind(this));
 			}
 		},
 
