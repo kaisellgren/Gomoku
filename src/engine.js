@@ -58,13 +58,20 @@
 		AIs: {},
 
 		/**
+		 * List of all scopes for AI players.
+		 */
+		AIScopes: {},
+
+		/**
 		 * Adds the given AI to the list of AIs.
 		 *
 		 * @param {String} name The name of the AI.
 		 * @param {Function} getter The function to call to retrieve the move.
+		 * @param {Object} scope
 		 */
-		addAI: function(name, getter) {
+		addAI: function(name, getter, scope) {
 			this.AIs[name] = getter;
+			this.AIScopes[name] = scope;
 		},
 
 		/**
@@ -167,7 +174,7 @@
 
 			// Process AI logic.
 			if (currentPlayer !== 'player') {
-				var position = this.AIs[currentPlayer](function(position) {
+				var position = this.AIs[currentPlayer].call(this.AIScopes[currentPlayer], function(position) {
 					this.addGameObject(position[0], position[1], this.turn);
 
 					this.turn = 1 - this.turn;
