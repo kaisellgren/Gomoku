@@ -1,7 +1,11 @@
 window.addEventListener('load', function() {
 	var engine = window.TTTEngine;
 
-	// Defines a shape.
+	/**
+	 * Defines a shape.
+	 *
+	 * @class Shape
+	 */
 	function Shape() {
 		this.score = 0;
 		this.objects = [];
@@ -9,8 +13,16 @@ window.addEventListener('load', function() {
 
 	// Define this AI.
 	var ai = {
+		/**
+		 * @type Shape[]
+		 */
 		shapes: [],
 
+		/**
+		 * Runs the AI engine. Currently inefficient.
+		 *
+		 * @param {Function} callback
+		 */
 		run: function(callback) {
 			var me = this;
 
@@ -55,13 +67,53 @@ window.addEventListener('load', function() {
 						y++;
 					}
 
+
+
 					me.shapes.push(shape);
 				}
 			});
 
-			console.log(this.shapes, this);
+			// Create rotated and mirrored versions as well, because we don't want to manually do those transforms in the shapes file.
+			// TODO
+
+			// Create scoreboard. An array of objects {x: 0, y: 0, score: 50}.
+			var scoreboard = [];
+
+			// Loop through the game area and mark scores.
+			for (var x = 0; x < highestX; x++) {
+				for (var y = 0; y < highestY; y++) {
+					for (var i = 0, l = this.shapes.length; i < l; i++) {
+						var shape = this.shapes[i];
+
+						// Check if the shape was found at [x, y] coordinate.
+						if (this.checkShape(x, y, shape)) {
+							scoreboard.push({
+								x: x,
+								y: y,
+								score: shape.score
+							});
+						}
+					}
+				}
+			}
+
+			// Choose the highest scored position (or random between several high positions).
+			// TODO
 
 			callback([randomX, randomY]);
+		},
+
+		/**
+		 * Checks if the shape can be found at given location.
+		 *
+		 * @param {Number} x
+		 * @param {Number} y
+		 * @param {Shape} shape
+		 */
+		checkShape: function(x, y, shape) {
+			shape.objects.forEach(function(shapeObject) {
+
+			});
 		}
 	};
 
