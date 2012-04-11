@@ -75,6 +75,23 @@
 		},
 
 		/**
+		 * Returns  the game object at the given location.
+		 *
+		 * @param {Number} x
+		 * @param {Number} y
+		 * @return {GameObject|null}
+		 */
+		getGameObject: function(x, y) {
+			var column = this.gameObjects[x];
+
+			if (!column) {
+				return null;
+			}
+
+			return column[y] || null;
+		},
+
+		/**
 		 * Draws the game board.
 		 */
 		draw: function() {
@@ -170,15 +187,22 @@
 		 * Processes the next move.
 		 */
 		processTurn: function() {
+			var me = this;
 			var currentPlayer = this.getCurrentPlayer();
 
 			// Process AI logic.
 			if (currentPlayer !== 'player') {
-				var position = this.AIs[currentPlayer].call(this.AIScopes[currentPlayer], function(position) {
+				this.AIs[currentPlayer].call(this.AIScopes[currentPlayer], function(position) {
 					this.addGameObject(position[0], position[1], this.turn);
 
 					this.turn = 1 - this.turn;
 					this.draw();
+
+					if (me.getCurrentPlayer() !== 'player') {
+						setTimeout(function() {
+							me.processTurn();
+						}, 0);
+					}
 				}.bind(this));
 			}
 		},

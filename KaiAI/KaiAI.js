@@ -1,6 +1,14 @@
 window.addEventListener('load', function() {
 	var engine = window.TTTEngine;
 
+	/*
+
+	 x = opponent / self tic or toe
+	 * = empty, placeable
+	 - = empty, not placeable
+
+	 */
+
 	/**
 	 * Defines a shape.
 	 *
@@ -45,29 +53,30 @@ window.addEventListener('load', function() {
 				if (part !== '') {
 					var dataParts = part.split(' ===');
 					var score = parseInt(dataParts[0], 10);
-					var shape = dataParts[1].replace(/\s+/, '');
-					shape = shape.replace(/(\r\n|\r|\n)$/, ''); // Remove last line break if it exists.
+					var shapeText = dataParts[1].replace(/\s+/, '');
+					shapeText = shapeText.replace(/(\r\n|\r|\n)$/, ''); // Remove last line break if it exists.
 
-					var lines = shape.split(/(\r\n|\r|\n)/);
+					var lines = shapeText.split(/(\r\n|\r|\n)/);
+
+					shape = new Shape();
+					shape.score = score;
+
 					var y = 0;
-					for (var i = 0, length = lines.length; i < length; i += 2) {
+					for (var i = 0, length = lines.length; i < length; i += 2) { // +2 because there are also \n items which we want to skip...
 						var line = lines[i];
 
-						shape = new Shape();
-						shape.score = score;
-
 						for (var x = 0, chars = line.length; x < chars; x++) {
-							shape.objects.push({
-								x: x,
-								y: y,
-								type: line[x]
-							});
+							if (line[x] !== ' ') {
+								shape.objects.push({
+									x: x,
+									y: y,
+									type: line[x]
+								});
+							}
 						}
 
 						y++;
 					}
-
-
 
 					me.shapes.push(shape);
 				}
@@ -97,10 +106,29 @@ window.addEventListener('load', function() {
 				}
 			}
 
-			// Choose the highest scored position (or random between several high positions).
-			// TODO
+			// Determine the highest score.
+			var highestScore = 0;
+			scoreboard.forEach(function(item) {
+				if (item.score > highestScore) {
+					highestScore = item.score;
+				}
+			});
 
-			callback([randomX, randomY]);
+			// Make an array of all highest scored items.
+			var highestScoredItems = [];
+			scoreboard.forEach(function(item) {
+				if (item.score === highestScore) {
+					highestScoredItems.push(item);
+				}
+			});
+
+			// Choose a random item.
+			if (highestScoredItems.length) {
+				var item = highestScoredItems[Math.floor(Math.random() * highestScoredItems.length)];
+				callback([item.x, item.y]);
+			} else {
+				callback([randomX, randomY]);
+			}
 		},
 
 		/**
@@ -111,9 +139,24 @@ window.addEventListener('load', function() {
 		 * @param {Shape} shape
 		 */
 		checkShape: function(x, y, shape) {
-			shape.objects.forEach(function(shapeObject) {
+			var matches = 0;
 
+			shape.objects.forEach(function(shapeObject) {
+				var gameObject = engine.getGameObject(x + shapeObject.x, y + shapeObject.y);
+
+				// Matched empty "*" or "-".
+				if ((shapeObject.type === '*' || shapeObject.type === '-') && gameObject === null) {
+					matches++;
+				}
+
+				// Matched "X". TODO: We should do two loops, one for tic and one for toe. This OR check is bad!
+				if (shapeObject.type === 'X' && gameObject && (gameObject.type === 0 || gameObject.type === 1)) {
+					matches++;
+				}
 			});
+
+			// Return true if all shape objects matched, and match count > 0.
+			return (matches && shape.objects.length === matches);
 		}
 	};
 
