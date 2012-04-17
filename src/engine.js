@@ -166,14 +166,14 @@
 							c.closePath();
 							break;
 
-						// Y
+						// O
 						case 1:
 							c.beginPath();
 							c.strokeStyle = 'rgb(32,128,32)';
-							c.arc(x * this.boardCellSize + 0.5 + this.boardCellSize / 2, y * this.boardCellSize + 0.5 + this.boardCellSize / 2, this.boardCellSize / 2 - 2 , 0, 360, 0);
+							c.arc(x * this.boardCellSize + 0.5 + this.boardCellSize / 2, y * this.boardCellSize + 0.5 + this.boardCellSize / 2, this.boardCellSize / 2 - 2 , 0, 360, false);
 							c.stroke();
 							c.closePath();
-						break;
+							break;
 
 						default:
 							throw new Error('Not implemented');
@@ -242,8 +242,8 @@
 		onGameBoardClick: function(e) {
 			// Ignore the click if it's not human player's turn.
 			if (this.getCurrentPlayer() === 'player') {
-				var cellX = Math.floor(e.offsetX / this.boardCellSize);
-				var cellY = Math.floor(e.offsetY / this.boardCellSize);
+				var cellX = Math.floor((e.offsetX || (e.clientX - e.target.offsetLeft)) / this.boardCellSize);
+				var cellY = Math.floor((e.offsetY || (e.clientY - e.target.offsetTop)) / this.boardCellSize);
 
 				this.addGameObject(cellX, cellY, this.turn);
 
