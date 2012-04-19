@@ -242,8 +242,8 @@
 		onGameBoardClick: function(e) {
 			// Ignore the click if it's not human player's turn.
 			if (this.getCurrentPlayer() === 'player') {
-				var cellX = Math.floor((e.offsetX || (e.clientX - e.target.offsetLeft)) / this.boardCellSize);
-				var cellY = Math.floor((e.offsetY || (e.clientY - e.target.offsetTop)) / this.boardCellSize);
+				var cellX = Math.floor((e.offsetX || (e.clientX - e.target.offsetLeft + window.scrollX)) / this.boardCellSize);
+				var cellY = Math.floor((e.offsetY || (e.clientY - e.target.offsetTop + window.scrollY)) / this.boardCellSize);
 
 				this.addGameObject(cellX, cellY, this.turn);
 
@@ -258,12 +258,13 @@
 		 * Runs the game engine.
 		 */
 		run: function() {
+			this.reset();
 			this.draw();
 			this.processTurn();
 		},
 
 		reset: function() {
-			throw new Error('Not implemented');
+			this.gameObjects = {};
 		}
 	};
 

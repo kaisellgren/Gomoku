@@ -37,53 +37,15 @@ window.addEventListener('load', function() {
 			var highestX = engine.boardWidth / engine.boardCellSize;
 			var highestY = engine.boardHeight / engine.boardCellSize;
 
-			var randomX = Math.floor(Math.random() * highestX);
-			var randomY = Math.floor(Math.random() * highestY);
+			// TODO: Choose a random EMPTY place.
+			var randomX, randomY;
+			while (engine.getGameObject(randomX, randomY) === null) {
+				randomX = Math.floor(Math.random() * highestX);
+				randomY = Math.floor(Math.random() * highestY);
+			}
 
-			// Fetch shapes.
-			var xhr = new XMLHttpRequest();
-			xhr.open('GET', 'KaiAI/Shapes', false);
-			xhr.send(null);
-
-			// Parse shape format into an object.
-			var shapesText = xhr.responseText;
-			var parts = shapesText.split('=== Score: ');
-			parts.forEach(function(part) {
-				// Skip if it's empty.
-				if (part !== '') {
-					var dataParts = part.split(' ===');
-					var score = parseInt(dataParts[0], 10);
-					var shapeText = dataParts[1].replace(/\s+/, '');
-					shapeText = shapeText.replace(/(\r\n|\r|\n)$/, ''); // Remove last line break if it exists.
-
-					var lines = shapeText.split(/(\r\n|\r|\n)/);
-
-					shape = new Shape();
-					shape.score = score;
-
-					var y = 0;
-					for (var i = 0, length = lines.length; i < length; i += 2) { // +2 because there are also \n items which we want to skip...
-						var line = lines[i];
-
-						for (var x = 0, chars = line.length; x < chars; x++) {
-							if (line[x] !== ' ') {
-								shape.objects.push({
-									x: x,
-									y: y,
-									type: line[x]
-								});
-							}
-						}
-
-						y++;
-					}
-
-					me.shapes.push(shape);
-				}
-			});
-
-			// Create rotated and mirrored versions as well, because we don't want to manually do those transforms in the shapes file.
-			// TODO
+			// Process shapes data.
+			this.processShapes();
 
 			// Create scoreboard. An array of objects {x: 0, y: 0, score: 50}.
 			var scoreboard = [];
@@ -96,10 +58,15 @@ window.addEventListener('load', function() {
 
 						// Check if the shape was found at [x, y] coordinate.
 						if (this.checkShape(x, y, shape)) {
-							scoreboard.push({
-								x: x,
-								y: y,
-								score: shape.score
+							// Add score to each peaceable position.
+							shape.objects.forEach(function(position) {
+								if (position.type === '*') {
+									scoreboard.push({
+										x: x + position.x,
+										y: y + position.y,
+										score: shape.score
+									});
+								}
 							});
 						}
 					}
@@ -132,6 +99,64 @@ window.addEventListener('load', function() {
 		},
 
 		/**
+		 * Processes shapes data.
+		 */
+		processShapes: function() {
+			var me = this;
+
+			// If we already have processed shapes, just return.
+			if (this.shapes.length) {
+				return true;
+			}
+
+			// Fetch shapes.
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', 'KaiAI/Shapes', false);
+			xhr.send(null);
+
+			// Parse shape format into an object.
+			this.shapes = [];
+			var shapesText = xhr.responseText;
+			var parts = shapesText.split('=== Score: ');
+			parts.forEach(function(part) {
+				// Skip if it's empty.
+				if (part !== '') {
+					var dataParts = part.split(' ===');
+					var score = parseInt(dataParts[0], 10);
+					var shapeText = dataParts[1].replace(/\s+/, '');
+					shapeText = shapeText.replace(/(\r\n|\r|\n)$/, ''); // Remove last line break if it exists.
+
+					var lines = shapeText.split(/(\r\n|\r|\n)/);
+
+					var shape = new Shape();
+					shape.score = score;
+
+					var y = 0;
+					for (var i = 0, length = lines.length; i < length; i += 2) { // +2 because there are also \n items which we want to skip...
+						var line = lines[i];
+
+						for (var x = 0, chars = line.length; x < chars; x++) {
+							if (line[x] !== ' ') {
+								shape.objects.push({
+									x: x,
+									y: y,
+									type: line[x]
+								});
+							}
+						}
+
+						y++;
+					}
+
+					me.shapes.push(shape);
+				}
+			});
+
+			// Create rotated and mirrored versions as well, because we don't want to manually do those transforms in the shapes file.
+			this.addRotatedShapes();
+		},
+
+		/**
 		 * Checks if the shape can be found at given location.
 		 *
 		 * @param {Number} x
@@ -157,6 +182,51 @@ window.addEventListener('load', function() {
 
 			// Return true if all shape objects matched, and match count > 0.
 			return (matches && shape.objects.length === matches);
+		},
+
+		/**
+		 * Adds rotated versions of shapes. Basically multiplies the number of shapes by four.
+		 *
+		 * TODO: Does not work properly.
+		 */
+		addRotatedShapes: function() {
+			var me = this;
+
+			this.shapes.forEach(function(shape) {
+				var objects = shape.objects;
+
+				// Now let's create 3 new shapes that represent the other 3 directions/rotations.
+
+				var newShape = new Shape();
+				newShape.score = shape.score;
+				newShape.objects = [];
+				objects.forEach(function(object) {
+					var temp = object.x;
+					newShape.objects.push({x: object.y, y: temp});
+				});
+
+				me.shapes.push(newShape);
+
+				newShape = new Shape();
+				newShape.score = shape.score;
+				newShape.objects = [];
+				objects.forEach(function(object) {
+					var temp = object.x;
+					newShape.objects.push({x: object.y, y: -temp});
+				});
+
+				me.shapes.push(newShape);
+
+				newShape = new Shape();
+				newShape.score = shape.score;
+				newShape.objects = [];
+				objects.forEach(function(object) {
+					var temp = object.x;
+					newShape.objects.push({x: -object.y, y: -temp});
+				});
+
+				me.shapes.push(newShape);
+			});
 		}
 	};
 
