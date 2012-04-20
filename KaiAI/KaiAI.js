@@ -32,20 +32,43 @@ window.addEventListener('load', function() {
 		 * @param {Function} callback
 		 */
 		run: function(callback) {
-			var me = this;
+			// Process shape data.
+			this.processShapes();
 
-			var highestX = engine.boardWidth / engine.boardCellSize;
-			var highestY = engine.boardHeight / engine.boardCellSize;
+			// TODO: Remove duplicate shapes to further improve performance.
+			// this.removeDuplicateShapes();
 
-			// TODO: Choose a random EMPTY place.
-			var randomX, randomY;
-			while (engine.getGameObject(randomX, randomY) === null) {
-				randomX = Math.floor(Math.random() * highestX);
-				randomY = Math.floor(Math.random() * highestY);
+			// Make the move.
+			var highestScoredItems = this.getHighestScoredItems();
+			if (highestScoredItems.length) {
+				// Choose a random item from the list.
+				var item = highestScoredItems[Math.floor(Math.random() * highestScoredItems.length)];
+				callback([item.x, item.y]);
 			}
 
-			// Process shapes data.
-			this.processShapes();
+			// If no suitable move found, pick a random place.
+			else {
+				var randomX, randomY,
+					highestX = engine.boardWidth / engine.boardCellSize,
+					highestY = engine.boardHeight / engine.boardCellSize;
+
+				while (engine.getGameObject(randomX, randomY) !== null) {
+					randomX = Math.floor(Math.random() * highestX);
+					randomY = Math.floor(Math.random() * highestY);
+				}
+
+				callback([randomX, randomY]);
+			}
+		},
+
+		/**
+		 * Returns an array of highest scored items/positions.
+		 *
+		 * @return {Array}
+		 */
+		getHighestScoredItems: function() {
+			var highestX = engine.boardWidth / engine.boardCellSize;
+			var highestY = engine.boardHeight / engine.boardCellSize;
 
 			// Create scoreboard. An array of objects {x: 0, y: 0, score: 50}.
 			var scoreboard = [];
@@ -89,13 +112,7 @@ window.addEventListener('load', function() {
 				}
 			});
 
-			// Choose a random item.
-			if (highestScoredItems.length) {
-				var item = highestScoredItems[Math.floor(Math.random() * highestScoredItems.length)];
-				callback([item.x, item.y]);
-			} else {
-				callback([randomX, randomY]);
-			}
+			return highestScoredItems;
 		},
 
 		/**
@@ -166,6 +183,8 @@ window.addEventListener('load', function() {
 		checkShape: function(x, y, shape) {
 			var matches = 0;
 
+			var metTicOrToe = null; // Keep logging if we met either X or O along the way.
+
 			shape.objects.forEach(function(shapeObject) {
 				var gameObject = engine.getGameObject(x + shapeObject.x, y + shapeObject.y);
 
@@ -174,9 +193,16 @@ window.addEventListener('load', function() {
 					matches++;
 				}
 
-				// Matched "X". TODO: We should do two loops, one for tic and one for toe. This OR check is bad!
-				if (shapeObject.type === 'X' && gameObject && (gameObject.type === 0 || gameObject.type === 1)) {
-					matches++;
+				// Matched "X".
+				var isGameObjectXOrO = gameObject && (gameObject.type === 0 || gameObject.type === 1);
+				if (shapeObject.type === 'X' && isGameObjectXOrO) {
+					// Make sure the match does not change type between X or O.
+					// i.e. we want *xxx* to match either 3 X's or 3 O's but not a mixed set of them.
+					var gameObjectTypeIsOk = metTicOrToe === null || gameObject.type === metTicOrToe;
+					if (gameObjectTypeIsOk) {
+						matches++;
+						metTicOrToe = gameObject.type;
+					}
 				}
 			});
 
@@ -186,11 +212,11 @@ window.addEventListener('load', function() {
 
 		/**
 		 * Adds rotated versions of shapes. Basically multiplies the number of shapes by four.
-		 *
-		 * TODO: Does not work properly.
 		 */
 		addRotatedShapes: function() {
 			var me = this;
+
+			var newShapes = [];
 
 			this.shapes.forEach(function(shape) {
 				var objects = shape.objects;
@@ -201,8 +227,17 @@ window.addEventListener('load', function() {
 				newShape.score = shape.score;
 				newShape.objects = [];
 				objects.forEach(function(object) {
+					newShape.objects.push({x: object.y, y: object.x, type: object.type});
+				});
+
+				newShapes.push(newShape);
+
+				newShape = new Shape();
+				newShape.score = shape.score;
+				newShape.objects = [];
+				objects.forEach(function(object) {
 					var temp = object.x;
-					newShape.objects.push({x: object.y, y: temp});
+					newShape.objects.push({x: object.y, y: -temp, type: object.type});
 				});
 
 				me.shapes.push(newShape);
@@ -212,21 +247,13 @@ window.addEventListener('load', function() {
 				newShape.objects = [];
 				objects.forEach(function(object) {
 					var temp = object.x;
-					newShape.objects.push({x: object.y, y: -temp});
-				});
-
-				me.shapes.push(newShape);
-
-				newShape = new Shape();
-				newShape.score = shape.score;
-				newShape.objects = [];
-				objects.forEach(function(object) {
-					var temp = object.x;
-					newShape.objects.push({x: -object.y, y: -temp});
+					newShape.objects.push({x: -object.y, y: -temp, type: object.type});
 				});
 
 				me.shapes.push(newShape);
 			});
+
+			this.shapes = this.shapes.concat(newShapes);
 		}
 	};
 

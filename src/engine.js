@@ -63,6 +63,11 @@
 		AIScopes: {},
 
 		/**
+		 * X and Y coordinates of the last successful move.
+		 */
+		lastMoveCoordinates: {x: -1, y: -1},
+
+		/**
 		 * Adds the given AI to the list of AIs.
 		 *
 		 * @param {String} name The name of the AI.
@@ -102,6 +107,7 @@
 
 			this.drawCells();
 			this.drawObjects();
+			this.drawLastMove();
 		},
 
 		/**
@@ -157,7 +163,7 @@
 						// X
 						case 0:
 							c.beginPath();
-							c.strokeStyle = 'rgb(128,32,32)';
+							c.strokeStyle = 'rgb(207,91,30)';
 							c.moveTo(x * this.boardCellSize + 2, y * this.boardCellSize + 2.5);
 							c.lineTo(x * this.boardCellSize + this.boardCellSize - 2, y * this.boardCellSize + 0.5 + this.boardCellSize - 2);
 							c.moveTo(x * this.boardCellSize + this.boardCellSize - 2, y * this.boardCellSize + 2.5);
@@ -169,7 +175,7 @@
 						// O
 						case 1:
 							c.beginPath();
-							c.strokeStyle = 'rgb(32,128,32)';
+							c.strokeStyle = 'rgb(10,148,207)';
 							c.arc(x * this.boardCellSize + 0.5 + this.boardCellSize / 2, y * this.boardCellSize + 0.5 + this.boardCellSize / 2, this.boardCellSize / 2 - 2 , 0, 360, false);
 							c.stroke();
 							c.closePath();
@@ -184,6 +190,27 @@
 		},
 
 		/**
+		 * Draws the last move with a red rectangle.
+		 */
+		drawLastMove: function() {
+			var ctx = this.ctx;
+
+			ctx.strokeStyle = 'rgb(255, 0, 0)';
+			ctx.lineWidth = 2;
+
+			ctx.beginPath();
+			ctx.strokeRect(
+				this.lastMoveCoordinates.x * this.boardCellSize,
+				this.lastMoveCoordinates.y * this.boardCellSize,
+				this.boardCellSize + 1,
+				this.boardCellSize + 1
+			);
+			ctx.closePath();
+
+			ctx.lineWidth = 1;
+		},
+
+		/**
 		 * Processes the next move.
 		 */
 		processTurn: function() {
@@ -194,6 +221,7 @@
 			if (currentPlayer !== 'player') {
 				this.AIs[currentPlayer].call(this.AIScopes[currentPlayer], function(position) {
 					this.addGameObject(position[0], position[1], this.turn);
+					me.lastMoveCoordinates = {x: position[0], y: position[1]};
 
 					this.turn = 1 - this.turn;
 					this.draw();
@@ -246,6 +274,7 @@
 				var cellY = Math.floor((e.offsetY || (e.clientY - e.target.offsetTop + window.scrollY)) / this.boardCellSize);
 
 				this.addGameObject(cellX, cellY, this.turn);
+				this.lastMoveCoordinates = {x: cellX, y: cellY};
 
 				// Continue processing the turn.
 				this.turn = 1 - this.turn;
