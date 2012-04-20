@@ -41,6 +41,8 @@ window.addEventListener('load', function() {
 			// Make the move.
 			var highestScoredItems = this.getHighestScoredItems();
 			if (highestScoredItems.length) {
+				console.log(highestScoredItems);
+
 				// Choose a random item from the list.
 				var item = highestScoredItems[Math.floor(Math.random() * highestScoredItems.length)];
 				callback([item.x, item.y]);
@@ -52,10 +54,12 @@ window.addEventListener('load', function() {
 					highestX = engine.boardWidth / engine.boardCellSize,
 					highestY = engine.boardHeight / engine.boardCellSize;
 
-				while (engine.getGameObject(randomX, randomY) !== null) {
+				while (randomX === undefined || engine.getGameObject(randomX, randomY) !== null) {
 					randomX = Math.floor(Math.random() * highestX);
 					randomY = Math.floor(Math.random() * highestY);
 				}
+
+				console.log('No suitable place found!', randomX, randomY);
 
 				callback([randomX, randomY]);
 			}
@@ -202,6 +206,19 @@ window.addEventListener('load', function() {
 					if (gameObjectTypeIsOk) {
 						matches++;
 						metTicOrToe = gameObject.type;
+					}
+				}
+
+				// Matched "B" = Block. Either different X/O or out of game arena.
+				if (shapeObject.type === 'B') {
+					var outOfGameArena = false; // TODO: Implement! Out of game arena check does not work yet because the loop never goes out of the arena!
+					if (outOfGameArena) {
+						matches++;
+					} else {
+						if (gameObject && (metTicOrToe === null || gameObject.type !== metTicOrToe)) {
+							matches++;
+							metTicOrToe = 1 - gameObject.type; // Switch the object type around because we match a block, not a player object.
+						}
 					}
 				}
 			});
