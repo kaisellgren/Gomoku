@@ -161,7 +161,7 @@ window.addEventListener('load', function() {
 								shape.objects.push({
 									x: x,
 									y: y,
-									type: line[x]
+									type: line[x].toUpperCase()
 								});
 							}
 						}

@@ -1,8 +1,32 @@
 === Score: 1 ===
-*x
+*X
 === Score: 1 ===
 *
- x
+ X
+=== Score: 5 ===
+-XX*
+=== Score: 5 ===
+-X*X-
+=== Score: 5 ===
+-
+X
+*
+X
+-
+=== Score: 15 ===
+-XX*X-
+=== Score: 15 ===
+-
+X
+X
+*
+X
+-
+=== Score: 5 ===
+-
+ X
+  X
+   *
 === Score: 50 ===
 -*XXX*-
 === Score: 50 ===
@@ -23,3 +47,44 @@ B
     X
      *
       *
+=== Score: 250 ===
+XXXX*
+=== Score: 250 ===
+X
+ X
+  X
+   X
+    *
+=== Score: 250 ===
+XX*XX
+=== Score: 250 ===
+X
+ X
+  *
+   X
+    X
+=== Score: 250 ===
+X*XXX
+=== Score: 250 ===
+X
+ *
+  X
+   X
+    X
+=== Score: 50 ===
+    -
+    -
+    X
+    X
+--XX*-
+    -
+=== Score: 50 ===
+     -
+    -
+   X
+- X
+ *
+- X
+   X
+    -
+     -
