@@ -26,6 +26,8 @@ window.addEventListener('load', function() {
 		 */
 		shapes: [],
 
+		scoreboard: null,
+
 		/**
 		 * Runs the AI engine. Currently inefficient.
 		 *
@@ -41,8 +43,6 @@ window.addEventListener('load', function() {
 			// Make the move.
 			var highestScoredItems = this.getHighestScoredItems();
 			if (highestScoredItems.length) {
-				console.log(highestScoredItems);
-
 				// Choose a random item from the list.
 				var item = highestScoredItems[Math.floor(Math.random() * highestScoredItems.length)];
 				callback([item.x, item.y]);
@@ -77,6 +77,22 @@ window.addEventListener('load', function() {
 			// Create scoreboard. An array of objects {x: 0, y: 0, score: 50}.
 			var scoreboard = [];
 
+			function updateScoreboard(x, y, score) {
+				var result = scoreboard.filter(function(item) {
+					return item.x === x && item.y === y;
+				});
+
+				if (result.length === 0) {
+					scoreboard.push({
+						x: x,
+						y: y,
+						score: score
+					});
+				} else {
+					result[0].score += score;
+				}
+			}
+
 			// Loop through the game area and mark scores.
 			for (var x = 0; x < highestX; x++) {
 				for (var y = 0; y < highestY; y++) {
@@ -88,11 +104,7 @@ window.addEventListener('load', function() {
 							// Add score to each peaceable position.
 							shape.objects.forEach(function(position) {
 								if (position.type === '*') {
-									scoreboard.push({
-										x: x + position.x,
-										y: y + position.y,
-										score: shape.score
-									});
+									updateScoreboard(x + position.x, y + position.y, shape.score);
 								}
 							});
 						}
@@ -115,6 +127,8 @@ window.addEventListener('load', function() {
 					highestScoredItems.push(item);
 				}
 			});
+
+			this.scoreboard = scoreboard;
 
 			return highestScoredItems;
 		},
@@ -271,8 +285,22 @@ window.addEventListener('load', function() {
 			});
 
 			this.shapes = this.shapes.concat(newShapes);
+		},
+
+		/**
+		 * Renders information about the scoreboard on the game board. Called when the engine wants.
+		 */
+		afterRender: function() {
+			if (!this.scoreboard) {
+				return true;
+			}
+
+			this.scoreboard.forEach(function(item) {
+				engine.drawInfoOnCell(item.score, item.x, item.y);
+			});
 		}
 	};
 
 	engine.addAI('KaiAI', ai.run, ai);
+	engine.afterRenderCallbacks.push(ai.afterRender.bind(ai));
 }, false);

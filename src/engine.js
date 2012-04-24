@@ -68,6 +68,11 @@
 		lastMoveCoordinates: {x: -1, y: -1},
 
 		/**
+		 * Push functions to register after rendering callbacks.
+		 */
+		afterRenderCallbacks: [],
+
+		/**
 		 * Adds the given AI to the list of AIs.
 		 *
 		 * @param {String} name The name of the AI.
@@ -97,6 +102,15 @@
 		},
 
 		/**
+		 * Returns the canvas context.
+		 *
+		 * @return {CanvasContext}
+		 */
+		getCanvasContext: function() {
+			return this.ctx;
+		},
+
+		/**
 		 * Draws the game board.
 		 */
 		draw: function() {
@@ -108,6 +122,24 @@
 			this.drawCells();
 			this.drawObjects();
 			this.drawLastMove();
+
+			this.afterRenderCallbacks.forEach(function(func) {func();});
+		},
+
+		/**
+		 * Draws the given text into the given cell.
+		 *
+		 * @param text
+		 * @param x
+		 * @param y
+		 */
+		drawInfoOnCell: function(text, x, y) {
+			x = x * this.boardCellSize;
+			y = y * this.boardCellSize;
+
+			this.ctx.strokeStyle = 'black';
+			this.ctx.font = 'normal 12pt Courier';
+			this.ctx.strokeText(text, x + 1, y + 13);
 		},
 
 		/**
