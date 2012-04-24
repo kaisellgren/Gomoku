@@ -243,6 +243,8 @@ window.addEventListener('load', function() {
 
 		/**
 		 * Adds rotated versions of shapes. Basically multiplies the number of shapes by four.
+		 *
+		 * TODO: Needs mirrored ones too!
 		 */
 		addRotatedShapes: function() {
 			var me = this;

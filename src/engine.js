@@ -111,6 +111,20 @@
 		},
 
 		/**
+		 * Check if there is a winner.
+		 */
+		checkWinner: function() {
+			var numberOfCellsHor = Math.floor(this.boardWidth / this.boardCellSize);
+			var numberOfCellsVer = Math.floor(this.boardHeight / this.boardCellSize);
+
+			for (var x = 0; x < numberOfCellsHor; x++) {
+				for (var y = 0; y < numberOfCellsVer; y++) {
+
+				}
+			}
+		},
+
+		/**
 		 * Draws the game board.
 		 */
 		draw: function() {
@@ -256,6 +270,8 @@
 					me.lastMoveCoordinates = {x: position[0], y: position[1]};
 
 					this.turn = 1 - this.turn;
+
+					this.checkWinner();
 					this.draw();
 
 					if (me.getCurrentPlayer() !== 'player') {
