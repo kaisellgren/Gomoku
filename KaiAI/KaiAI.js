@@ -36,7 +36,7 @@ window.addEventListener('load', function() {
 		run: function(callback) {
 			// Process shape data.
 			this.processShapes();
-
+console.log(this.shapes);
 			// TODO: Remove duplicate shapes to further improve performance.
 			// this.removeDuplicateShapes();
 
@@ -260,30 +260,43 @@ window.addEventListener('load', function() {
 				newShape.score = shape.score;
 				newShape.objects = [];
 				objects.forEach(function(object) {
-					newShape.objects.push({x: object.y, y: object.x, type: object.type});
+                    var x = -object.y;
+                    var y = object.x;
+					newShape.objects.push({x: x, y: y, type: object.type});
 				});
 
 				newShapes.push(newShape);
 
-				newShape = new Shape();
-				newShape.score = shape.score;
-				newShape.objects = [];
+				var newShape2 = new Shape();
+				newShape2.score = shape.score;
+				newShape2.objects = [];
 				objects.forEach(function(object) {
-					var temp = object.x;
-					newShape.objects.push({x: object.y, y: -temp, type: object.type});
+                    var x = -object.y;
+                    var y = object.x;
+                    var tempX = x;
+                    x = -y;
+                    y = tempX;
+					newShape2.objects.push({x: x, y: y, type: object.type});
 				});
 
-				me.shapes.push(newShape);
+                newShapes.push(newShape2);
 
-				newShape = new Shape();
-				newShape.score = shape.score;
-				newShape.objects = [];
+				var newShape3 = new Shape();
+				newShape3.score = shape.score;
+				newShape3.objects = [];
 				objects.forEach(function(object) {
-					var temp = object.x;
-					newShape.objects.push({x: -object.y, y: -temp, type: object.type});
+                    var x = -object.y;
+                    var y = object.x;
+                    var tempX = x;
+                    x = -y;
+                    y = tempX;
+                    var tempX2 = x;
+                    x = -y;
+                    y = tempX2;
+					newShape3.objects.push({x: x, y: y, type: object.type});
 				});
 
-				me.shapes.push(newShape);
+				newShapes.push(newShape3);
 			});
 
 			this.shapes = this.shapes.concat(newShapes);

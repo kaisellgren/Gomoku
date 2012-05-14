@@ -30,6 +30,11 @@
 		boardWidth: 0,
 		boardHeight: 0,
 
+        /**
+         * An array consisting of [fromX, fromY, toX, toY] winner line. False if no winner yet.
+         */
+        winnerLine: false,
+
 		/**
 		 * Contains every object in the board.
 		 *
@@ -50,7 +55,7 @@
 		 *
 		 * If it's a string "player", then it's human, otherwise it's an AI of the specified name.
 		 */
-		players: ['player', 'KaiAI'],
+		players: ['KaiAI', 'player'],
 
 		/**
 		 * List of all possible AI players.
@@ -114,12 +119,89 @@
 		 * Check if there is a winner.
 		 */
 		checkWinner: function() {
-			var numberOfCellsHor = Math.floor(this.boardWidth / this.boardCellSize);
-			var numberOfCellsVer = Math.floor(this.boardHeight / this.boardCellSize);
+			var c = this.ctx;
 
-			for (var x = 0; x < numberOfCellsHor; x++) {
-				for (var y = 0; y < numberOfCellsVer; y++) {
+			for (var x in this.gameObjects) {
+				if (!this.gameObjects.hasOwnProperty(x)) {
+					continue;
+				}
 
+				var objects = this.gameObjects[x];
+				for (var y in objects) {
+					if (!objects.hasOwnProperty(y)) {
+						continue;
+					}
+
+					/** @type GameObject object */
+					var object = objects[y];
+
+					// XXXXX
+					var found = true;
+					for (var i = 1; i < 5; i++) {
+						var gameObject = this.getGameObject(parseInt(x, 10) + i, y);
+						if (!gameObject || gameObject.type !== object.type) {
+							found = false;
+						}
+					}
+
+					if (found) {
+                        this.winnerLine = [x, y, parseInt(x, 10) + i, y];
+                        return true;
+					}
+
+                    // X
+                    // X
+                    // X
+                    // X
+                    // X
+                    found = true;
+                    for (i = 1; i < 5; i++) {
+                        gameObject = this.getGameObject(x, parseInt(y, 10) + i);
+                        if (!gameObject || gameObject.type !== object.type) {
+                            found = false;
+                        }
+                    }
+
+                    if (found) {
+                        this.winnerLine = [x, y, x, parseInt(y, 10) + i];
+                        return true;
+                    }
+
+                    // X
+                    //  X
+                    //   X
+                    //    X
+                    //     X
+                    found = true;
+                    for (i = 1; i < 5; i++) {
+                        gameObject = this.getGameObject(parseInt(x, 10) + i, parseInt(y, 10) + i);
+                        if (!gameObject || gameObject.type !== object.type) {
+                            found = false;
+                        }
+                    }
+
+                    if (found) {
+                        this.winnerLine = [x, y, parseInt(x, 10) + i, parseInt(y, 10) + i];
+                        return true;
+                    }
+
+                    //     X
+                    //    X
+                    //   X
+                    //  X
+                    // X
+                    found = true;
+                    for (i = 1; i < 5; i++) {
+                        gameObject = this.getGameObject(parseInt(x, 10) + i, parseInt(y, 10) - i);
+                        if (!gameObject || gameObject.type !== object.type) {
+                            found = false;
+                        }
+                    }
+
+                    if (found) {
+                        this.winnerLine = [x, y, parseInt(x, 10) + i, parseInt(y, 10) - i];
+                        return true;
+                    }
 				}
 			}
 		},
@@ -136,6 +218,7 @@
 			this.drawCells();
 			this.drawObjects();
 			this.drawLastMove();
+            this.drawWinnerLine();
 
 			this.afterRenderCallbacks.forEach(function(func) {func();});
 		},
@@ -152,7 +235,7 @@
 			y = y * this.boardCellSize;
 
 			this.ctx.strokeStyle = 'black';
-			this.ctx.font = 'normal 12pt Courier';
+			this.ctx.font = 'normal 11pt Courier';
 			this.ctx.strokeText(text, x + 1, y + 13);
 		},
 
@@ -184,6 +267,25 @@
 				c.closePath();
 			}
 		},
+
+        /**
+         * Draws the winner line.
+         */
+        drawWinnerLine: function() {
+            var c = this.ctx;
+
+            if (this.winnerLine !== false) {
+                c.strokeStyle = 'rgb(255, 0, 0)';
+                c.lineWidth = 2;
+
+                c.beginPath();
+                c.moveTo(this.winnerLine[0] * this.boardCellSize, this.winnerLine[1] * this.boardCellSize + this.boardCellSize / 2);
+                c.lineTo(this.winnerLine[2] * this.boardCellSize, this.winnerLine[3] * this.boardCellSize + this.boardCellSize / 2);
+                c.stroke();
+                c.closePath();
+                console.log(this.winnerLine);
+            }
+        },
 
 		/**
 		 * Draws all game objects.
@@ -264,7 +366,7 @@
 			var currentPlayer = this.getCurrentPlayer();
 
 			// Process AI logic.
-			if (currentPlayer !== 'player') {
+			if (currentPlayer !== 'player' && this.winnerLine === false) {
 				this.AIs[currentPlayer].call(this.AIScopes[currentPlayer], function(position) {
 					this.addGameObject(position[0], position[1], this.turn);
 					me.lastMoveCoordinates = {x: position[0], y: position[1]};
@@ -317,7 +419,7 @@
 		 */
 		onGameBoardClick: function(e) {
 			// Ignore the click if it's not human player's turn.
-			if (this.getCurrentPlayer() === 'player') {
+			if (this.getCurrentPlayer() === 'player' && this.winnerLine === false) {
 				var cellX = Math.floor((e.offsetX || (e.clientX - e.target.offsetLeft + window.scrollX)) / this.boardCellSize);
 				var cellY = Math.floor((e.offsetY || (e.clientY - e.target.offsetTop + window.scrollY)) / this.boardCellSize);
 
@@ -326,6 +428,7 @@
 
 				// Continue processing the turn.
 				this.turn = 1 - this.turn;
+                this.checkWinner();
 				this.draw();
 				this.processTurn();
 			}
@@ -342,6 +445,8 @@
 
 		reset: function() {
 			this.gameObjects = {};
+            this.winnerLine = false;
+            this.ctx.clearRect(0, 0, this.boardWidth, this.boardHeight);
 		}
 	};
 
